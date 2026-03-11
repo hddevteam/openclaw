@@ -32,11 +32,15 @@ export type MSTeamsResolvedRouteConfig = {
 export function resolveMSTeamsRouteConfig(params: {
   cfg?: MSTeamsConfig;
   teamId?: string | null | undefined;
+  alternateTeamIds?: Array<string | null | undefined>;
   teamName?: string | null | undefined;
   conversationId?: string | null | undefined;
   channelName?: string | null | undefined;
 }): MSTeamsResolvedRouteConfig {
   const teamId = params.teamId?.trim();
+  const alternateTeamIds = (params.alternateTeamIds ?? [])
+    .map((value) => value?.trim())
+    .filter(Boolean);
   const teamName = params.teamName?.trim();
   const conversationId = params.conversationId?.trim();
   const channelName = params.channelName?.trim();
@@ -47,6 +51,9 @@ export function resolveMSTeamsRouteConfig(params: {
     teamName,
     teamName ? normalizeChannelSlug(teamName) : undefined,
   );
+  for (const alternateTeamId of alternateTeamIds) {
+    teamCandidates.push(...buildChannelKeyCandidates(alternateTeamId));
+  }
   const teamMatch = resolveChannelEntryMatchWithFallback({
     entries: teams,
     keys: teamCandidates,
