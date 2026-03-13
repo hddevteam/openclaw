@@ -16,6 +16,7 @@ import {
   resolveToolsBySender,
   resolveChannelEntryMatchWithFallback,
   resolveNestedAllowlistDecision,
+  isDangerousNameMatchingEnabled,
 } from "openclaw/plugin-sdk/msteams";
 
 export type MSTeamsResolvedRouteConfig = {
@@ -36,6 +37,7 @@ export function resolveMSTeamsRouteConfig(params: {
   teamName?: string | null | undefined;
   conversationId?: string | null | undefined;
   channelName?: string | null | undefined;
+  allowNameMatching?: boolean;
 }): MSTeamsResolvedRouteConfig {
   const teamId = params.teamId?.trim();
   const alternateTeamIds = (params.alternateTeamIds ?? [])
@@ -48,8 +50,8 @@ export function resolveMSTeamsRouteConfig(params: {
   const allowlistConfigured = Object.keys(teams).length > 0;
   const teamCandidates = buildChannelKeyCandidates(
     teamId,
-    teamName,
-    teamName ? normalizeChannelSlug(teamName) : undefined,
+    params.allowNameMatching ? teamName : undefined,
+    params.allowNameMatching && teamName ? normalizeChannelSlug(teamName) : undefined,
   );
   for (const alternateTeamId of alternateTeamIds) {
     teamCandidates.push(...buildChannelKeyCandidates(alternateTeamId));
@@ -65,8 +67,8 @@ export function resolveMSTeamsRouteConfig(params: {
   const channelAllowlistConfigured = Object.keys(channels).length > 0;
   const channelCandidates = buildChannelKeyCandidates(
     conversationId,
-    channelName,
-    channelName ? normalizeChannelSlug(channelName) : undefined,
+    params.allowNameMatching ? channelName : undefined,
+    params.allowNameMatching && channelName ? normalizeChannelSlug(channelName) : undefined,
   );
   const channelMatch = resolveChannelEntryMatchWithFallback({
     entries: channels,
@@ -108,6 +110,7 @@ export function resolveMSTeamsGroupToolPolicy(
   const groupId = params.groupId?.trim();
   const groupChannel = params.groupChannel?.trim();
   const groupSpace = params.groupSpace?.trim();
+  const allowNameMatching = isDangerousNameMatchingEnabled(cfg);
 
   const resolved = resolveMSTeamsRouteConfig({
     cfg,
@@ -115,6 +118,7 @@ export function resolveMSTeamsGroupToolPolicy(
     teamName: groupSpace,
     conversationId: groupId,
     channelName: groupChannel,
+    allowNameMatching,
   });
 
   if (resolved.channelConfig) {
@@ -165,8 +169,8 @@ export function resolveMSTeamsGroupToolPolicy(
 
   const channelCandidates = buildChannelKeyCandidates(
     groupId,
-    groupChannel,
-    groupChannel ? normalizeChannelSlug(groupChannel) : undefined,
+    allowNameMatching ? groupChannel : undefined,
+    allowNameMatching && groupChannel ? normalizeChannelSlug(groupChannel) : undefined,
   );
   for (const teamConfig of Object.values(cfg.teams ?? {})) {
     const match = resolveChannelEntryMatchWithFallback({

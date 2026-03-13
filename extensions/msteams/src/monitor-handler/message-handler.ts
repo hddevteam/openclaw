@@ -178,6 +178,7 @@ export function createMSTeamsMessageHandler(deps: MSTeamsMessageHandlerDeps) {
       teamName,
       conversationId,
       channelName,
+      allowNameMatching: isDangerousNameMatchingEnabled(msteamsCfg),
     });
     const senderGroupPolicy = resolveSenderScopedGroupPolicy({
       groupPolicy,
