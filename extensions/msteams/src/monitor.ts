@@ -281,6 +281,7 @@ export async function monitorMSTeamsProvider(
 
   // Set up the messages endpoint - use configured path and /api/messages as fallback
   const configuredPath = msteamsCfg.webhook?.path ?? "/api/messages";
+
   const messageHandler = (req: Request, res: Response) => {
     void adapter
       .process(req, res, (context: unknown) => handler.run!(context))
